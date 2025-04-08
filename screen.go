@@ -1,13 +1,17 @@
 package tinygl
 
 import (
+	"math/rand"
 	"time"
 
 	"tinygo.org/x/drivers"
 	"tinygo.org/x/drivers/pixel"
 )
 
-const showStats = false
+const (
+	showStats         = false
+	drawBufferUpdates = false
+)
 
 // The Displayer that is drawn to.
 type Displayer[T pixel.Color] interface {
@@ -137,6 +141,19 @@ func (s *Screen[T]) Send(x, y int, buffer pixel.Image[T]) {
 	if showStats {
 		s.statBuffers++
 		start = time.Now()
+	}
+	if drawBufferUpdates {
+		col := pixel.NewColor[T](uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)))
+		sx, sy := buffer.Size()
+		for cx := 0; cx < sx; cx++ {
+			buffer.Set(cx, 0, col)
+			buffer.Set(cx, sy-1, col)
+		}
+
+		for cy := 0; cy < sy; cy++ {
+			buffer.Set(0, cy, col)
+			buffer.Set(sx-1, cy, col)
+		}
 	}
 	s.display.DrawBitmap(int16(x), int16(y), buffer)
 	if showStats {
